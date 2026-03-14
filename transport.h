@@ -310,7 +310,7 @@ public:
             return;
         }
 
-        cout << "\n====  COST ANALYSIS: " << src << " -> " << dst << "  ====\n";
+        cout << "\n...... COST ANALYSIS: " << src << " -> " << dst << "  ......\n";
 
         double costDist = 0, costTime = 0;
 
@@ -384,9 +384,9 @@ public:
 
     // Q9: full query — top 3 paths + cost comparison + recommendation
     void fullQuery(const string& src, const string& dst) const {
-        cout << "\n========================================\n";
+        cout << "\n..............................................................................\n";
         cout << "  FULL QUERY: " << src << " -> " << dst << "\n";
-        cout << "========================================\n";
+        cout << "..............................................................................\n";
 
         auto paths = yenKSP(src, dst, 3, 0);
         if (paths.empty()) {

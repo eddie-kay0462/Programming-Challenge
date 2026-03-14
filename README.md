@@ -8,7 +8,7 @@ Language: C++17
 
 ## Overview
 
-This program models the Ghana road transport network as an undirected weighted graph. Each town is a node and each road is an edge carrying two weights: distance (km) and travel time (minutes). The program supports shortest-path queries, K-shortest paths, and cost analysis through an interactive terminal menu.
+This program models the Ghana road transport network as a weighted graph. Each town is a node and each road is an edge carrying two weights: distance (km) and travel time (minutes). The program supports shortest-path queries, top-3 shortest paths, cost analysis with recommendations, and live graph editing through an interactive terminal menu.
 
 ---
 
@@ -16,8 +16,12 @@ This program models the Ghana road transport network as an undirected weighted g
 
 | File | Description |
 |---|---|
-| `transport.cpp` | Full source code (single-file) |
+| `transport.h` | TransportGraph class — all data structures, algorithms, and menu |
+| `transport.cpp` | Entry point (`main`) |
+| `test_transport.cpp` | 23 modular tests |
 | `ghana_cities_graph_2026.txt` | Edge list: 183 towns, 551 roads |
+| `complexity_analysis.md` | Q10 — time complexity analysis and scalability estimates |
+| `Makefile` | Build targets |
 
 ---
 
@@ -26,11 +30,14 @@ This program models the Ghana road transport network as an undirected weighted g
 Requires a C++17-compliant compiler (GCC 7+, Clang 5+, MSVC 2017+).
 
 ```bash
-# GCC
-g++ -std=c++17 -O2 -o transport transport.cpp
+make transport    # build main program
+make test         # build and run all tests
+make clean        # remove binaries
+```
 
-# Clang
-clang++ -std=c++17 -O2 -o transport transport.cpp
+Or manually:
+```bash
+g++ -std=c++17 -O2 -o transport transport.cpp
 ```
 
 ---
@@ -46,7 +53,7 @@ clang++ -std=c++17 -O2 -o transport transport.cpp
 
 ## Data File Format
 
-Plain-text CSV, one edge per line, no header:
+Plain-text CSV, one edge per line. Header rows (containing "source" and "destination") are automatically skipped.
 
 ```
 Source, Destination, Distance(km), Time(min)
@@ -60,7 +67,19 @@ Kumasi, Obuasi, 53, 57
 
 - Whitespace around field values is ignored.
 - Duplicate edges are silently skipped.
-- The graph is treated as **undirected**: each line adds edges in both directions.
+- Each line adds edges in both directions (undirected).
+
+---
+
+## Assumptions
+
+1. **Bidirectional roads** — The problem states "directed road network" but also says "you may also assume that there is route from Tema back to Abeka." We treat every edge as bidirectional (each CSV row creates edges in both directions).
+2. **Same weight both directions** — A road has the same distance and travel time in both directions.
+3. **No negative weights** — All distances and times are positive, which is required for Dijkstra's correctness.
+4. **"Best route" = lowest total cost** — When recommending a route (Q8, Q9), we compare total cost (fuel + time) and recommend the cheapest option.
+5. **Top 3 paths by distance** — Q6 asks for top 3 shortest-distance paths. We use Yen's K-Shortest Paths algorithm with K=3, weighted by distance.
+6. **Graph editing is in-memory only** — Q9 edge modifications (add/remove/update) affect the running program but do not write back to the data file.
+7. **Scalability estimates assume sparse graphs** — Q10 analysis assumes E ≈ 6V (consistent with the dataset's average degree), not dense graphs.
 
 ---
 
@@ -77,37 +96,60 @@ Kumasi, Obuasi, 53, 57
 ## Interactive Menu
 
 ```
-┌─── MENU ──────────────────────────────────┐
-│  1. Print adjacency list (first 10 towns) │
-│  2. Show neighbours of a town             │
-│  3. Shortest path (distance)              │
-│  4. Shortest path (time)                  │
-│  5. K-shortest paths                      │
-│  6. Cost analysis (fuel + time cost)      │
-│  0. Quit                                  │
-└───────────────────────────────────────────┘
+--- Menu ---
+ 1. Print adjacency list
+ 2. Show neighbours
+ 3. Shortest path (distance)
+ 4. Shortest path (time)
+ 5. Top 3 shortest-distance paths
+ 6. Cost analysis + recommendation
+ 7. Full query (top 3 + time + costs + recommendation)
+ 8. Add road
+ 9. Remove road
+10. Update road
+11. Export graph (DOT file)
+ 0. Quit
 ```
 
 ### Option 1 — Adjacency list
-Prints the first 10 towns in load order with all their direct neighbours, distances, and travel times.
+Prints the first 10 towns with all their direct neighbours, distances, and travel times.
 
 ### Option 2 — Neighbours of a town
-Prompts for a town name and lists every directly connected town with distance and travel time.
+Lists every directly connected town with distance and travel time.
 
-### Option 3 — Shortest path by distance
-Runs Dijkstra's algorithm minimising total kilometres. Reports the optimal distance, total travel time, and the full route.
+### Option 3 — Shortest path by distance (Q4)
+Dijkstra minimising total kilometres. Reports distance, time, and full route.
 
-### Option 4 — Shortest path by time
-Runs Dijkstra's algorithm minimising total travel time. Reports the optimal time, total distance, and the full route.
+### Option 4 — Shortest path by time (Q5)
+Dijkstra minimising total travel time. Reports time, distance, and full route.
 
-### Option 5 — K-shortest paths (Yen's algorithm)
-Prompts for source, destination, K (number of paths), and weight (0 = distance, 1 = time). Returns the K least-cost simple paths ranked by the chosen weight, each showing distance, time, and the full route.
+### Option 5 — Top 3 shortest-distance paths (Q6)
+Yen's algorithm with K=3. Shows each path's town sequence, distance, and time.
 
-### Option 6 — Cost analysis
-Runs both shortest-distance and shortest-time Dijkstra queries and displays a side-by-side breakdown:
+### Option 6 — Cost analysis + recommendation (Q7, Q8)
+Compares shortest-distance vs shortest-time routes side by side:
 - Fuel cost (GHS) = `distance / 8 × 11.95`
 - Time cost (GHS) = `time × 0.50`
-- Total cost (GHS) = fuel cost + time cost
+- Total cost = fuel cost + time cost
+- Recommends the route with lower total cost and states the savings.
+
+### Option 7 — Full query (Q9)
+Combined output for any town pair:
+- Top 3 shortest-distance paths with full cost breakdown per path
+- Fastest-time path
+- Final recommendation (lowest total cost across all paths)
+
+### Options 8–10 — Graph editing (Q9)
+Modify the graph at runtime without restarting:
+- **Add road**: creates a new bidirectional edge
+- **Remove road**: deletes an existing edge (simulates road closure)
+- **Update road**: changes distance/time on an existing edge
+
+### Option 11 — Export graph (Q2.3)
+Writes a Graphviz DOT file (`graph.dot`). Render with:
+```bash
+dot -Tpng graph.dot -o graph.png
+```
 
 ---
 
@@ -116,50 +158,35 @@ Runs both shortest-distance and shortest-time Dijkstra queries and displays a si
 | Question | Algorithm | Complexity |
 |---|---|---|
 | Q1 | File parsing into adjacency list | O(E) |
-| Q2 | Adjacency list traversal | O(deg(v)) |
-| Q3 | Neighbour lookup | O(deg(v)) |
-| Q4 | Dijkstra's algorithm (binary heap) | O((V + E) log V) |
-| Q5 | Yen's K-Shortest Paths | O(KV(V + E) log V) |
-| Q7 | Fuel and time cost formulas | O(1) |
+| Q2, Q3 | Adjacency list lookup | O(deg(v)) |
+| Q4, Q5 | Dijkstra's algorithm (binary heap) | O((V + E) log V) |
+| Q6 | Yen's K-Shortest Paths (K=3) | O(KV(V + E) log V) |
+| Q7 | Fuel cost formula | O(1) |
 | Q8 | Cost analysis (two Dijkstra runs) | O((V + E) log V) |
+| Q9 | Edge operations + full query | O(deg(v)) + O(KV(V + E) log V) |
+
+See `complexity_analysis.md` for Q10 scalability discussion (100 to 5000 nodes).
 
 ---
 
-## Example Session
+## Tests
 
-```
-Loaded graph: 183 towns, 551 edges.
+23 tests covering:
+- File loading (valid and invalid files)
+- Graph construction (town count, edge count, lookup)
+- Neighbour queries
+- Dijkstra correctness (distance and time, both directions)
+- Path total calculations
+- Yen's KSP ordering and count
+- Fuel cost and total cost formulas
+- Edge operations (add, remove, update)
 
-Choice: 3
-Source town: Accra
-Destination town: Kumasi
-
-  Distance     : 510 km
-  Total dist   : 510 km
-  Total time   : 584 min
-  Route: Accra → Berekum → Wenchi → Juaso → Nalerigu → Gambaga → Kumasi
-
-Choice: 6
-Source town: Accra
-Destination town: Kumasi
-
-━━━━  COST ANALYSIS: Accra → Kumasi  ━━━━
-  Shortest-distance route    dist= 510 km  time= 584 min
-    Fuel cost   : GHS   761.81
-    Time cost   : GHS   292.00
-    TOTAL cost  : GHS  1053.81
-    Route: Accra → Berekum → Wenchi → Juaso → Nalerigu → Gambaga → Kumasi
-  Shortest-time route        dist= 607 km  time= 499 min
-    Fuel cost   : GHS   906.71
-    Time cost   : GHS   249.50
-    TOTAL cost  : GHS  1156.21
-    Route: Accra → Konongo → Obuasi → Kumasi
-```
+Run with `make test`.
 
 ---
 
-## Known Limitations / Pending Work
+## Known Limitations
 
-- Questions 6, 9, and 10 are not yet implemented.
-- The adjacency list display is capped at 10 towns; a full-print option is not yet exposed in the menu.
 - Town name matching is case-sensitive (`Accra` ≠ `accra`).
+- Adjacency list display is capped at 10 towns.
+- Graph edits are in-memory only (not persisted to file).

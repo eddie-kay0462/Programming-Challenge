@@ -107,7 +107,6 @@ Kumasi, Obuasi, 53, 57
  8. Add road
  9. Remove road
 10. Update road
-11. Export graph (DOT file)
  0. Quit
 ```
 
@@ -145,11 +144,6 @@ Modify the graph at runtime without restarting:
 - **Remove road**: deletes an existing edge (simulates road closure)
 - **Update road**: changes distance/time on an existing edge
 
-### Option 11 — Export graph (Q2.3)
-Writes a Graphviz DOT file (`graph.dot`). Render with:
-```bash
-dot -Tpng graph.dot -o graph.png
-```
 
 ---
 

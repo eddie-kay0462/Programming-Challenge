@@ -440,30 +440,7 @@ public:
         }
     }
 
-    // Q2.3: export graph as DOT file for Graphviz
-    void exportDOT(const string& filename) const {
-        ofstream f(filename);
-        if (!f.is_open()) {
-            cerr << "Could not write to " << filename << "\n";
-            return;
-        }
-        f << "graph GhanaRoads {\n";
-        f << "  node [shape=ellipse, fontsize=10];\n";
-        f << "  edge [fontsize=8];\n";
-        set<pair<int,int>> written;
-        for (int u = 0; u < N; u++) {
-            for (auto& e : adj[u]) {
-                int a = min(u, e.to), b = max(u, e.to);
-                if (written.count({a, b})) continue;
-                written.insert({a, b});
-                f << "  \"" << towns[u] << "\" -- \"" << towns[e.to]
-                  << "\" [label=\"" << e.dist << "km\"];\n";
-            }
-        }
-        f << "}\n";
-        cout << "Graph exported to " << filename << "\n";
-        cout << "Render with: dot -Tpng " << filename << " -o graph.png\n";
-    }
+ 
 
     void run() {
         cout << "\nGhana Road Transport Network (2026)\n";
@@ -481,7 +458,6 @@ public:
             cout << " 8. Add road\n";
             cout << " 9. Remove road\n";
             cout << "10. Update road\n";
-            cout << "11. Export graph (DOT file)\n";
             cout << " 0. Quit\n";
             cout << "Choice: ";
 
@@ -553,9 +529,7 @@ public:
                     cout << "Road updated: " << src << " <-> " << dst << "\n";
                 else
                     cout << "Road not found.\n";
-            } else if (choice == 11) {
-                exportDOT("graph.dot");
-            } else {
+            }  else {
                 cout << "invalid choice\n";
             }
         }

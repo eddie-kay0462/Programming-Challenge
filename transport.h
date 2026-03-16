@@ -447,14 +447,14 @@ public:
         cout << "Loaded: " << N << " towns, " << E << " edges\n";
 
         while (true) {
-            cout << "\n--- Menu ---\n";
+            cout << "\n--- Menu: ---\n";
             cout << " 1. Print adjacency list\n";
             cout << " 2. Show neighbours\n";
             cout << " 3. Shortest path (distance)\n";
             cout << " 4. Shortest path (time)\n";
             cout << " 5. Top 3 shortest-distance paths\n";
             cout << " 6. Cost analysis + recommendation\n";
-            cout << " 7. Full query (top 3 + time + costs + recommendation)\n";
+            cout << " 7. Full query (top 3 shortest-distance paths + time + costs + recommendation)\n";
             cout << " 8. Add road\n";
             cout << " 9. Remove road\n";
             cout << "10. Update road\n";

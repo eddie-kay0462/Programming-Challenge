@@ -310,7 +310,7 @@ public:
             return;
         }
 
-        cout << "\n...... COST ANALYSIS: " << src << " -> " << dst << "  ......\n";
+        cout << "\nCost Analysis: " << src << " -> " << dst << "\n";
 
         double costDist = 0, costTime = 0;
 
@@ -332,7 +332,7 @@ public:
         costDist = show(rd, "Shortest-distance route");
         costTime = show(rt, "Shortest-time route");
 
-        cout << "\n  >> RECOMMENDATION: ";
+        cout << "\n  Recommendation: ";
         if (costDist <= costTime) {
             printf("Take the shortest-distance route (saves GHS %.2f)\n", costTime - costDist);
             cout << "     Lower fuel cost outweighs the extra travel time.\n";
@@ -342,7 +342,6 @@ public:
         }
     }
 
-    // Q9: graph editing operations
     bool updateEdge(const string& srcName, const string& dstName, int newDist, int newTime) {
         auto it1 = townIndex.find(srcName);
         auto it2 = townIndex.find(dstName);
@@ -382,11 +381,8 @@ public:
         }
     }
 
-    // Q9: full query — top 3 paths + cost comparison + recommendation
     void fullQuery(const string& src, const string& dst) const {
-        cout << "\n..............................................................................\n";
-        cout << "  FULL QUERY: " << src << " -> " << dst << "\n";
-        cout << "..............................................................................\n";
+        cout << "\nFull Query: " << src << " -> " << dst << "\n";
 
         auto paths = yenKSP(src, dst, 3, 0);
         if (paths.empty()) {
@@ -432,7 +428,7 @@ public:
             }
         }
 
-        cout << "\n>> RECOMMENDATION: ";
+        cout << "\nRecommendation: ";
         if (bestIdx == -1) {
             printf("Take the fastest-time path (lowest total cost: GHS %.2f)\n", bestCost);
         } else {
